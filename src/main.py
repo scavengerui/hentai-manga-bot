@@ -7,7 +7,6 @@ import shutil
 
 from scraper import scrape_image_urls
 from converter import download_images, convert_images_to_pdf
-from drive_utils import upload_pdf_to_drive
 from telegram_utils import send_pdf_to_telegram
 from notify_bot import send_failure_alert
 
@@ -52,7 +51,6 @@ def main():
         start_chapter = progress.get(title, 1)
         chat_id = data["telegram_chat_id"]
         bot_token = data["telegram_bot_token"]
-        drive_folder = data["drive_folder_id"]
         alert_token = data.get("alert_bot_token")
         alert_chat_id = data.get("alert_chat_id")
 
@@ -85,9 +83,6 @@ def main():
 
                     logging.info("🧾 Converting to PDF...")
                     convert_images_to_pdf(image_paths, pdf_path)
-
-                    logging.info("☁️ Uploading to Google Drive...")
-                    #upload_pdf_to_drive(pdf_path, drive_folder)
 
                     logging.info("📤 Sending to Telegram...")
                     send_pdf_to_telegram(pdf_path, bot_token, chat_id, title, chapter)
