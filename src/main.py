@@ -2,6 +2,8 @@ import os
 import json
 import time
 import traceback
+import logging
+import shutil
 
 from scraper import scrape_image_urls
 from converter import download_images, convert_images_to_pdf
@@ -9,8 +11,20 @@ from drive_utils import upload_pdf_to_drive
 from telegram_utils import send_pdf_to_telegram
 from notify_bot import send_failure_alert
 
-CONFIG_PATH = "../config/hentai_config.json" 
-PROGRESS_PATH = "../config/progress.json"
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler()
+    ]
+)
+
+# Define paths relative to the script's location
+script_dir = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.normpath(os.path.join(script_dir, "..", "config", "hentai_config.json"))
+PROGRESS_PATH = os.path.normpath(os.path.join(script_dir, "..", "config", "progress.json"))
 
 RETRY_LIMIT = 3
 
@@ -25,12 +39,12 @@ def save_json(path, data):
         json.dump(data, f, indent=2)
 
 def main():
-    print("🚀 Starting HentaiBot...")
+    logging.info("🚀 Starting HentaiBot...")
     config = load_json(CONFIG_PATH)
     progress = load_json(PROGRESS_PATH)
 
     if not config:
-        print("❌ No config found. Check hentai_config.json!")
+        logging.error("❌ No config found. Check hentai_config.json!")
         return
 
     for title, data in config.items():
@@ -42,11 +56,11 @@ def main():
         alert_token = data.get("alert_bot_token")
         alert_chat_id = data.get("alert_chat_id")
 
-        print(f"\n📚 Processing title: {title}")
+        logging.info(f"\n📚 Processing title: {title}")
         chapter = start_chapter
 
         while True:
-            print(f"\n➡️ Starting Chapter {chapter}...")
+            logging.info(f"\n➡️ Starting Chapter {chapter}...")
 
             chapter_url = base_url.format(chapter)
             temp_dir = f"temp_{title.replace(' ', '_')}_{chapter}"
@@ -57,57 +71,55 @@ def main():
             success = False
 
             for attempt in range(1, RETRY_LIMIT + 1):
-                print(f"🔄 Attempt {attempt}/3")
+                logging.info(f"🔄 Attempt {attempt}/3")
                 try:
-                    print("🔍 Scraping image URLs...")
+                    logging.info("🔍 Scraping image URLs...")
                     image_urls = scrape_image_urls(chapter_url)
                     if not image_urls:
                         raise Exception("No images found on the page.")
 
-                    print("📥 Downloading images...")
+                    logging.info("📥 Downloading images...")
                     image_paths = download_images(image_urls, temp_dir)
                     if not image_paths:
                         raise Exception("Image download failed.")
 
-                    print("🧾 Converting to PDF...")
+                    logging.info("🧾 Converting to PDF...")
                     convert_images_to_pdf(image_paths, pdf_path)
 
-                    print("☁️ Uploading to Google Drive...")
+                    logging.info("☁️ Uploading to Google Drive...")
                     #upload_pdf_to_drive(pdf_path, drive_folder)
 
-                    print("📤 Sending to Telegram...")
+                    logging.info("📤 Sending to Telegram...")
                     send_pdf_to_telegram(pdf_path, bot_token, chat_id, title, chapter)
 
                     success = True
-                    print(f"✅ Successfully processed Chapter {chapter}")
+                    logging.info(f"✅ Successfully processed Chapter {chapter}")
                     break
 
                 except Exception as e:
-                    print(f"❌ Error: {e}")
+                    logging.error(f"❌ Error: {e}")
                     traceback.print_exc()
                     if attempt == RETRY_LIMIT and alert_token and alert_chat_id:
-                        print("📡 Sending failure alert...")
+                        logging.info("📡 Sending failure alert...")
                         send_failure_alert(alert_token, alert_chat_id, title, chapter, str(e))
 
                 time.sleep(3)
 
-            print("🧹 Cleaning up temporary files...")
+            logging.info("🧹 Cleaning up temporary files...")
             try:
-                for file in os.listdir(temp_dir):
-                    os.remove(os.path.join(temp_dir, file))
-                os.rmdir(temp_dir)
+                shutil.rmtree(temp_dir, ignore_errors=True)
             except Exception as e:
-                print(f"⚠️ Cleanup warning: {e}")
+                logging.warning(f"⚠️ Cleanup warning: {e}")
 
             if not success:
-                print(f"⚠️ Skipping Chapter {chapter} due to persistent failure.\n")
+                logging.warning(f"⚠️ Skipping Chapter {chapter} due to persistent failure.\n")
                 break
 
             progress[title] = chapter + 1
             save_json(PROGRESS_PATH, progress)
             chapter += 1
 
-    print("🏁 All titles processed.")
+    logging.info("🏁 All titles processed.")
 
 if __name__ == "__main__":
     main()
