@@ -3,6 +3,10 @@ name: Run Hentai Manga Bot
 on:
   workflow_dispatch:
 
+# Set permissions at the workflow level
+permissions:
+  contents: write  # Grants read/write access to repository contents
+
 jobs:
   run-bot:
     runs-on: ubuntu-latest
