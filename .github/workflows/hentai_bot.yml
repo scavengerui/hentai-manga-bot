@@ -24,6 +24,16 @@ jobs:
     - name: Run the bot
       run: python src/main.py
 
+    - name: Commit and push progress changes
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        git add config/progress.json
+        git commit -m "Update progress.json with latest chapter numbers" || echo "No changes to commit"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Upload logs
       if: always()
       uses: actions/upload-artifact@v4
