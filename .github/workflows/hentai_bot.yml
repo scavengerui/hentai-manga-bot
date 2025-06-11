@@ -1,11 +1,12 @@
 name: Run Hentai Manga Bot
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Keep for manual triggering
+  schedule:
+    - cron: "30 3 * * *"  # Run daily at 3:30 AM UTC (9:00 AM IST)
 
-# Set permissions at the workflow level
 permissions:
-  contents: write  # Grants read/write access to repository contents
+  contents: write
 
 jobs:
   run-bot:
