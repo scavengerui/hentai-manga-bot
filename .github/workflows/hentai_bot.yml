@@ -22,4 +22,11 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run the bot
-      run: python src/main.py  # Updated path to main.py
+      run: python src/main.py
+
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: bot-logs
+        path: bot.log
