@@ -6,7 +6,7 @@ from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
 load_dotenv()
 
-CREDENTIALS_PATH = "../credentials/service_account.json"
+CREDENTIALS_PATH = "./service_account.json"
 PARENT_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
 
 def get_drive_service():
