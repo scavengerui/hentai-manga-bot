@@ -7,7 +7,7 @@ def send_pdf_to_telegram(pdf_path, bot_token, chat_id, title, chapter):
     """
     bot = Bot(token=bot_token)
 
-    caption = f"📖 *{title}* - Chapter {chapter}"
+    caption = f"📖 Chapter {chapter}"
     try:
         with open(pdf_path, "rb") as f:
             bot.send_document(
