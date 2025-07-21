@@ -10,5 +10,4 @@ Automated bot to scrape chapters from hentai20.io, convert them to PDFs, upload 
 - Retry logic and failure alert bot
 - GitHub Actions automation ready
 
-## 📁 Folder Structure
 
