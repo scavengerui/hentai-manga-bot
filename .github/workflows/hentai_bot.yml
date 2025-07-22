@@ -27,6 +27,11 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run the bot
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        ALERT_BOT_TOKEN: ${{ secrets.ALERT_BOT_TOKEN }}
+        ALERT_CHAT_ID: ${{ secrets.ALERT_CHAT_ID }}
+        GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
       run: python src/main.py
 
     - name: Commit and push progress changes
