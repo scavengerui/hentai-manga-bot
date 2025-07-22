@@ -5,6 +5,14 @@ import traceback
 import logging
 import shutil
 
+
+
+print("=== DEBUG: ENV VARS ===")
+print("ALERT_BOT_TOKEN:", os.getenv("ALERT_BOT_TOKEN"))
+print("ALERT_CHAT_ID:", os.getenv("ALERT_CHAT_ID"))
+print("TELEGRAM_BOT_TOKEN:", os.getenv("TELEGRAM_BOT_TOKEN"))
+print("GOOGLE_DRIVE_FOLDER_ID:", os.getenv("GOOGLE_DRIVE_FOLDER_ID"))
+
 from scraper import scrape_image_urls
 from converter import download_images, convert_images_to_pdf
 from telegram_utils import send_pdf_to_telegram
