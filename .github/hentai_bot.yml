@@ -1,25 +1,65 @@
 name: Run Hentai Manga Bot
 
 on:
-  workflow_dispatch:
+  schedule:
+    # Runs every 5 minutes (at the 0, 5, 10, 15... minute mark of every hour)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Keep manual triggering as an option
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for committing changes
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run the bot
-      run: python main.py
+      - name: Run the bot
+        # Run your main script
+        run: python main.py
+        # You may want to add 'continue-on-error: true' here if the bot failing should not stop the commit process.
+
+      # --- Steps for Commit ---
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Check for changes and commit
+        id: commit_check
+        run: |
+          # Use the 'git status' command to see if there are any uncommitted changes.
+          git add .
+          
+          # Check if there are any differences between HEAD and the index (staging area)
+          if ! git diff --cached --exit-code; then
+            echo "Changes detected. Committing..."
+            git commit -m "Bot Run: Update Check ($(date -u +'%Y-%m-%d %H:%M'))"
+            echo "::set-output name=committed::true"
+          else
+            echo "No changes detected. Creating empty commit to log run."
+            # Create an empty commit if no files changed, to log the run.
+            git commit --allow-empty -m "Bot Run: No update ($(date -u +'%Y-%m-%d %H:%M'))"
+            echo "::set-output name=committed::true"
+          fi
+          
+      - name: Push changes
+        # Push only if a commit (empty or otherwise) was created
+        if: steps.commit_check.outputs.committed == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }} # Push to the current branch
